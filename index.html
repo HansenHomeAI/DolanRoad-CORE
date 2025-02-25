@@ -98,20 +98,31 @@
         developerMode: false  // Set this to true to activate developer mode
     };
 
+    // Hotspot configurations (regular)
     const hotspotConfigurations = [
         { text: '315 DOLAN RD', position: { x: -0.75, y: 0.44, z: 0 }, scale: 0.3 },
         { text: '312 DOLAN RD', position: { x: 0.22, y: 0.43, z: 0.39 }, scale: 0.3 },
         { text: '324 DOLAN RD', position: { x: 0.22, y: 0.48, z: -0.21 }, scale: 0.3 },
         { text: '336 DOLAN RD', position: { x: 0.22, y: 0.52, z: -0.85 }, scale: 0.3 },
         { text: '145 RINK RD', position: { x: -0.12, y: 0.46, z: -1.7 }, scale: 0.3 },
+        // (Removed the 'SOLD' line from here so it doesn't get the sphere)
+    ];
 
+    // "Sold" hotspot configuration (new separate 'Sold' class)
+    // Added a 'verticalOffset' to allow controlling its height offset
+    const soldHotspotConfigurations = [
+        { 
+            text: 'SOLD', 
+            position: { x: 0.22, y: 0.5, z: -0.85 }, 
+            scale: 0.2,
+            verticalOffset: 0.06 // You can adjust this to move the text up/down while rotating around the same center
+        },
     ];
 
     // Centralized control section for TapDots
     const tapDotConfigurations = [
-        // Example TapDots
+        // Example TapDots (none currently)
         //{ position: { x: 0, y: 0, z: 1 }, scale: 1, icon: 'info' },
-        //{ position: { x: 1, y: 0, z: 0 }, scale: 1, icon: 'camera' },
     ];
 
     // Base tap detection radius in pixels
@@ -133,13 +144,13 @@
         { name: 'BorderDot_12', position: { x: 0.83, y: 0.482, z: 0.05 } },
         { name: 'BorderDot_13', position: { x: 0.83, y: 0.41, z: 0.67 } },
 
-		{ name: 'BorderDot_14', position: { x: -0.38, y: 0.46, z: -0.3 } },
- 		{ name: 'BorderDot_15', position: { x: -0.7, y: 0.47, z: -0.3 } },
- 		{ name: 'BorderDot_16', position: { x: -1.1, y: 0.44, z: -0.3 } },
+        { name: 'BorderDot_14', position: { x: -0.38, y: 0.46, z: -0.3 } },
+        { name: 'BorderDot_15', position: { x: -0.7, y: 0.47, z: -0.3 } },
+        { name: 'BorderDot_16', position: { x: -1.1, y: 0.44, z: -0.3 } },
        
-     	{ name: 'BorderDot_17', position: { x: -0.32, y: 0.51, z: -1.18 } },
-     	{ name: 'BorderDot_18', position: { x: 0.4, y: 0.48, z: -1.18 } },
-     	{ name: 'BorderDot_19', position: { x: 0.83, y: 0.45, z: -1.18 } },
+        { name: 'BorderDot_17', position: { x: -0.32, y: 0.51, z: -1.18 } },
+        { name: 'BorderDot_18', position: { x: 0.4, y: 0.48, z: -1.18 } },
+        { name: 'BorderDot_19', position: { x: 0.83, y: 0.45, z: -1.18 } },
 
         { name: 'BorderDot_20', position: { x: 0.34, y: 0.51, z: -0.56 } },
         { name: 'BorderDot_21', position: { x: -0.36, y: 0.472, z: -0.56 } },
@@ -152,13 +163,13 @@
         { start: 'BorderDot_1', end: 'BorderDot_2' },
         { start: 'BorderDot_2', end: 'BorderDot_3' },
         { start: 'BorderDot_3', end: 'BorderDot_4' },
- 		{ start: 'BorderDot_4', end: 'BorderDot_5' },
+        { start: 'BorderDot_4', end: 'BorderDot_5' },
         { start: 'BorderDot_5', end: 'BorderDot_6' },
         { start: 'BorderDot_6', end: 'BorderDot_7' },
         { start: 'BorderDot_7', end: 'BorderDot_8' },
         { start: 'BorderDot_8', end: 'BorderDot_9' },
         { start: 'BorderDot_9', end: 'BorderDot_10' },
- 		{ start: 'BorderDot_10', end: 'BorderDot_11' },
+        { start: 'BorderDot_10', end: 'BorderDot_11' },
         { start: 'BorderDot_11', end: 'BorderDot_12' },
         { start: 'BorderDot_12', end: 'BorderDot_13' },
         { start: 'BorderDot_13', end: 'BorderDot_2' },
@@ -459,8 +470,12 @@
         });
     }
 
+    // Create normal hotspots (unchanged logic)
     const totalHotspots = hotspotConfigurations.length;
     const hotspots = hotspotConfigurations.map((config, index) => createHotspot(config, index, totalHotspots));
+
+    // Create "Sold" hotspots (new function, same concept but no sphere + orange text)
+    const soldHotspots = soldHotspotConfigurations.map((config) => createSoldHotspot(config));
 
     function calculateMaxDistance() {
         const aspectRatio = window.innerWidth / window.innerHeight;
@@ -559,6 +574,7 @@
     });
     requestAnimationFrame(fadeInBorders);
 
+    // Original hotspot creation function (unchanged)
     function createHotspot(hotspotConfig, index, totalHotspots) {
         const { text, position, scale } = hotspotConfig;
         let dotGeometry = new SphereGeometry(0.03, 32, 32);
@@ -607,6 +623,57 @@
         return { dot, textPlane };
     }
 
+    // New "Sold" hotspot creation function
+    // Identical to createHotspot except:
+    // - No sphere is created
+    // - The text color is orange (#FF4F40 here)
+    // - We add a controllable verticalOffset (config.verticalOffset)
+    function createSoldHotspot(config) {
+        const { text, position, scale, verticalOffset } = config;
+
+        // Create the text canvas (orange text, no sphere)
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 3072;
+        canvas.height = 512;
+        context.fillStyle = 'rgba(255, 255, 255, 0)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = '520 250px "Helvetica Neue", Helvetica, Arial, sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        context.lineWidth = 5;
+        // Orange text fill:
+        context.fillStyle = '#BF281B';
+        context.fillText(text, canvas.width / 2, canvas.height / 2);
+        context.strokeText(text, canvas.width / 2, canvas.height / 2);
+
+        const texture = new Texture(canvas);
+        texture.needsUpdate = true;
+        const geometry = new PlaneGeometry(2.4, 0.4);
+        const material = new MeshStandardMaterial({
+            map: texture,
+            transparent: false,
+            alphaTest: 0.5,
+            side: DoubleSide,
+            premultipliedAlpha: true,
+            emissive: '#BF281B',
+            emissiveIntensity: 2,
+        });
+
+        const textPlane = new Mesh(geometry, material);
+        // Position at the same center but allow a verticalOffset
+        textPlane.position.set(position.x, position.y + (verticalOffset || 0), position.z);
+        textPlane.rotation.y = MathUtils.degToRad(90);
+        textPlane.scale.setScalar(scale);
+
+        // You can further modify geometry translation if desired, but here we keep it minimal
+        scene.add(textPlane);
+
+        // Return something if we need to track it
+        return { textPlane };
+    }
+
     window.addEventListener('resize', function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -627,8 +694,14 @@
             camera.lookAt(scene.position);
         }
 
+        // Make normal hotspot text always face the camera
         hotspots.forEach(hotspot => {
             hotspot.textPlane.lookAt(camera.position);
+        });
+
+        // Make "Sold" hotspot text always face the camera
+        soldHotspots.forEach(sold => {
+            sold.textPlane.lookAt(camera.position);
         });
 
         tapDots.forEach(tapDot => {
@@ -693,6 +766,12 @@
             console.log('No TapDot detected');
         }
     });
+
+    // Start animation once icons are loaded
+    // (If no icons, we simply call animate() immediately)
+    if (iconsToLoad.length === 0) {
+        animate();
+    }
     </script>
 </body>
 </html>
